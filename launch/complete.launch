@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- UR5e in Webots with ROS controller -->
+  <arg name="mode"   default="realtime" doc="Startup mode"/>
+  <arg name="no-gui" default="false"    doc="Start Webots with minimal GUI"/>
+
+  <include file="$(find webots_manipulation)/launch/minimal.launch"/>
+
+  <!-- MoveIt! planning execution -->
+  <include file="$(find ur5_e_moveit_config)/launch/ur5_e_moveit_planning_execution.launch"/>
+
+  <!-- RViz -->
+  <arg name="rviz" default="true" doc="Start RViz"/>
+
+  <include file="$(find ur5_e_moveit_config)/launch/moveit_rviz.launch" if="$(arg rviz)">
+    <arg name="config" value="true"/>
+  </include>
+
+  <!-- Depth-to-RGB registration and processing -->
+  <include file="$(find webots_manipulation)/launch/kinect.launch"/>
+</launch>

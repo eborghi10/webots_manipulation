@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package>
+  <name>webots_manipulation</name>
+  <version>0.0.1</version>
+  <description>The ROS package that contains training code with MoveIt! and Webots.</description>
+
+  <maintainer email="eborghi@ekumenlabs.com">Emiliano Borghi</maintainer>
+  <author>Emiliano Borghi</author>
+
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>roscpp</build_depend>
+
+  <run_depend>rospy</run_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>universal_robot</run_depend>
+
+</package>

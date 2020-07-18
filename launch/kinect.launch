@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="manager" default="camera_nodelet_manager" />
+
+  <!-- Nodelet manager with 4 threads -->
+  <include file="$(find rgbd_launch)/launch/includes/manager.launch.xml">
+    <arg name="name" value="$(arg manager)" />
+    <arg name="num_worker_threads"  value="4" />
+  </include>
+
+  <!-- Image processing -->
+  <include file="$(find rgbd_launch)/launch/includes/processing.launch.xml">
+    <arg name="manager" value="$(arg manager)" />
+    <arg name="rgb_processing"                  value="true"/>
+    <arg name="ir_processing"                   value="true"/>
+    <arg name="depth_processing"                value="true"/>
+    <arg name="depth_registered_processing"     value="true"/>
+    <arg name="disparity_processing"            value="true"/>
+    <arg name="disparity_registered_processing" value="true"/>
+    <arg name="hw_registered_processing"        value="true"/>
+    <arg name="sw_registered_processing"        value="true"/>
+  </include>
+
+  <!-- Tf tree -->
+  <include file="$(find rgbd_launch)/launch/kinect_frames.launch" />
+  <!-- Kinect static Tf -->
+  <node pkg="tf" type="static_transform_publisher" name="camera_link_broadcaster"
+        args="0 0 -0.05 0 0.707 -0.707 0 tool0 camera_link 5"/>
+</launch>

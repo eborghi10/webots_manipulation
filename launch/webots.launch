@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Webots ROS -->
+  <arg name="mode"   default="realtime" doc="Startup mode"/>
+  <arg name="no-gui" default="false" doc="Start Webots with minimal GUI"/>
+  <arg name="world"  value="$(find webots_manipulation)/worlds/factory.wbt"
+       doc="Path to the world to load"/>
+
+  <!--
+    TODO: USE synchronize TO CONNECT TO NODES
+    https://cyberbotics.com/doc/guide/tutorial-8-using-ros#running-the-nodes
+    -->
+  <node name="webots" pkg="webots_manipulation" type="webots_launcher.py"
+        required="true"
+        args="--world=$(arg world) --mode=$(arg mode) --no-gui=$(arg no-gui)"/>
+</launch>
