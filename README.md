@@ -13,11 +13,15 @@ worskpace
 |___webots_docker
 |___ws
     |___src
+        |___robotiq
         |___universal_robot
         |___webots_manipulation
 ```
 
-- Download `universal_robot` from [here](https://github.com/eborghi10/universal_robot).
+Clone the following dependencies into your workspace:
+
+- [`robotiq`](https://github.com/ros-industrial/robotiq)
+- [`universal_robot`](https://github.com/eborghi10/universal_robot)
 
 ## Instructions
 
@@ -31,4 +35,21 @@ roslaunch webots_manipulation minimal.launch
 
 ```bash
 roslaunch webots_manipulation complete.launch
+```
+
+### Pick and place
+
+```bash
+rosrun webots_manipulation pick_and_place
+```
+
+---
+
+## Tips
+
+- Getting `move_group`s. Open the MoveIt! Command Line Tool:
+
+```bash
+$ rosrun moveit_commander moveit_commander_cmdline.py
+> use [TAB]
 ```
