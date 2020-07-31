@@ -70,10 +70,11 @@ def interp_cubic(p0, p1, t_abs):
     """Perform a cubic interpolation between two trajectory points."""
     T = (p1.time_from_start - p0.time_from_start).to_sec()
     t = t_abs - p0.time_from_start.to_sec()
-    q = [0] * 6
-    qdot = [0] * 6
-    qddot = [0] * 6
-    for i in range(len(p0.positions)):
+    q_size = len(p0.positions)
+    q = [0] * q_size
+    qdot = [0] * q_size
+    qddot = [0] * q_size
+    for i in range(q_size):
         a = p0.positions[i]
         b = p0.velocities[i]
         c = (-3 * p0.positions[i] + 3 * p1.positions[i] - 2 * T * p0.velocities[i] - T * p1.velocities[i]) / T**2
@@ -104,31 +105,23 @@ def sample_trajectory(trajectory, t):
 class TrajectoryFollower(object):
     """Create and handle the action 'follow_joint_trajectory' server."""
 
-    jointNames = [
-        'shoulder_pan_joint',
-        'shoulder_lift_joint',
-        'elbow_joint',
-        'wrist_1_joint',
-        'wrist_2_joint',
-        'wrist_3_joint'
-    ]
-
-    def __init__(self, robot, jointStatePublisher, jointPrefix, nodeName, goal_time_tolerance=None):
+    def __init__(self, robot, jointStatePublisher, jointPrefix, jointNames, nodeName, goal_time_tolerance=None):
         self.robot = robot
         self.jointPrefix = jointPrefix
-        self.prefixedJointNames = [s + self.jointPrefix for s in TrajectoryFollower.jointNames]
+        self.jointNames = jointNames
+        self.prefixedJointNames = [s + self.jointPrefix for s in self.jointNames]
         self.jointStatePublisher = jointStatePublisher
         self.timestep = int(robot.getBasicTimeStep())
         self.motors = []
         self.sensors = []
-        for name in TrajectoryFollower.jointNames:
+        for name in self.jointNames:
             self.motors.append(robot.getMotor(name))
             self.sensors.append(robot.getPositionSensor(name + '_sensor'))
             self.sensors[-1].enable(self.timestep)
         self.goal_handle = None
         self.trajectory = None
-        self.joint_goal_tolerances = [0.05, 0.05, 0.05, 0.05, 0.05, 0.05]
-        self.server = actionlib.ActionServer(nodeName + "follow_joint_trajectory",
+        self.joint_goal_tolerances = [0.05] * len(self.jointNames)
+        self.server = actionlib.ActionServer(nodeName + "/follow_joint_trajectory",
                                              FollowJointTrajectoryAction,
                                              self.on_goal, self.on_cancel, auto_start=False)
 
@@ -139,9 +132,9 @@ class TrajectoryFollower(object):
         self.trajectory = JointTrajectory()
         self.trajectory.joint_names = self.prefixedJointNames
         self.trajectory.points = [JointTrajectoryPoint(
-            positions=state.position if state else [0] * 6,
-            velocities=[0] * 6,
-            accelerations=[0] * 6,
+            positions=state.position if state else [0] * len(self.jointNames),
+            velocities=[0] * len(self.jointNames),
+            accelerations=[0] * len(self.jointNames),
             time_from_start=rospy.Duration(0.0))]
 
     def start(self):
@@ -189,7 +182,7 @@ class TrajectoryFollower(object):
         """Handle a trajectory cancel command."""
         if goal_handle == self.goal_handle:
             # stop the motors
-            for i in range(len(TrajectoryFollower.jointNames)):
+            for i in range(len(self.jointNames)):
                 self.motors[i].setPosition(self.sensors[i].getValue())
             self.goal_handle.set_canceled()
             self.goal_handle = None
@@ -215,8 +208,8 @@ class TrajectoryFollower(object):
                     self.motors[i].setPosition(setpoint.positions[i])
                     # Velocity control is not used on the real robot and gives bad results in the simulation
                     # self.motors[i].setVelocity(math.fabs(setpoint.velocities[i]))
-                position_in_tol = within_tolerance(state.position, last_point.positions, [0.1] * 6)
-                velocity_in_tol = within_tolerance(state.velocity, last_point.velocities, [0.05] * 6)
+                position_in_tol = within_tolerance(state.position, last_point.positions, [0.1] * len(self.jointNames))
+                velocity_in_tol = within_tolerance(state.velocity, last_point.velocities, [0.05] * len(self.jointNames))
                 if position_in_tol and velocity_in_tol:
                     # The arm reached the goal (and isn't moving) => Succeeded
                     self.goal_handle.set_succeeded()
