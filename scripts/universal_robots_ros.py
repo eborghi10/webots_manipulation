@@ -24,6 +24,7 @@ from controller import Robot
 from joint_state_publisher import JointStatePublisher
 from trajectory_follower import TrajectoryFollower
 from kinect_helper import KinectHelper
+from robotiq_gripper_3f import Robotiq3F
 from rosgraph_msgs.msg import Clock
 
 
@@ -40,8 +41,27 @@ if jointPrefix:
 robot = Robot()
 nodeName = arguments.nodeName + '/' if arguments.nodeName != 'ur_driver' else ''
 jointStatePublisher = JointStatePublisher(robot, jointPrefix, nodeName)
-trajectoryFollower = TrajectoryFollower(robot, jointStatePublisher, jointPrefix, nodeName)
-trajectoryFollower.start()
+# These joints must match with the list in ros_controllers.yaml!
+armJointNames = [
+    'shoulder_pan_joint',
+    'shoulder_lift_joint',
+    'elbow_joint',
+    'wrist_1_joint',
+    'wrist_2_joint',
+    'wrist_3_joint'
+]
+armTrajectoryFollower = TrajectoryFollower(robot, jointStatePublisher, jointPrefix, armJointNames, 'arm_controller')
+armTrajectoryFollower.start()
+# These joints must match with the list in ros_controllers.yaml!
+handJointNames = [
+    'finger_1_joint_1',
+    'finger_2_joint_1',
+    'finger_middle_joint_1',
+    'palm_finger_1_joint',
+    'palm_finger_2_joint'
+]
+handTrajectoryFollower = TrajectoryFollower(robot, jointStatePublisher, jointPrefix, handJointNames, 'hand_controller')
+handTrajectoryFollower.start()
 
 # we want to use simulation time for ROS
 clockPublisher = rospy.Publisher('clock', Clock, queue_size=1)
@@ -54,9 +74,13 @@ timestep = 64 #int(robot.getBasicTimeStep())
 kinect = KinectHelper(robot.getCamera('kinect color'),
     robot.getRangeFinder('kinect range'), timestep)
 
+# Gripper
+gripper = Robotiq3F(robot, timestep)
+
 while robot.step(timestep) != -1 and not rospy.is_shutdown():
     jointStatePublisher.publish()
-    trajectoryFollower.update()
+    armTrajectoryFollower.update()
+    handTrajectoryFollower.update()
     # pulish simulation clock
     msg = Clock()
     time = robot.getTime()
