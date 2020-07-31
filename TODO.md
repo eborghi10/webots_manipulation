@@ -1,15 +1,6 @@
 # TODO
 
-## Short term
-
-### Enable gripper
-
-- [Have a 3-finger gripper simulated in Gazebo](https://www.youtube.com/watch?v=dnjP0z333-k)
-- [Migrate this plugin to Webots](https://github.com/ros-industrial/robotiq/blob/kinetic-devel/robotiq_3f_gripper_articulated_gazebo_plugins/src/RobotiqHandPlugin.cpp)
-- [`joint_state_publisher`](https://github.com/ros-industrial/robotiq/tree/kinetic-devel/robotiq_3f_gripper_joint_state_publisher)
-- [Robotiq 3F documentation](https://cyberbotics.com/doc/guide/gripper-actuators)
-
-### Test pick and place
+## Test pick and place
 
 - Enable pick_and_place.cpp example
 
