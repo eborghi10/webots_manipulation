@@ -7,15 +7,22 @@
   <include file="$(find webots_manipulation)/launch/minimal.launch"/>
 
   <!-- MoveIt! planning execution -->
-  <include file="$(find ur5_e_moveit_config)/launch/ur5_e_moveit_planning_execution.launch"/>
+  <include file="$(find ur5_e_moveit_config)/launch/planning_execution.launch"/>
 
   <!-- RViz -->
   <arg name="rviz" default="true" doc="Start RViz"/>
 
-  <include file="$(find ur5_e_moveit_config)/launch/moveit_rviz.launch" if="$(arg rviz)">
-    <arg name="config" value="true"/>
-  </include>
+  <include file="$(find ur5_e_moveit_config)/launch/moveit_rviz.launch" if="$(arg rviz)"/>
 
   <!-- Depth-to-RGB registration and processing -->
   <include file="$(find webots_manipulation)/launch/kinect.launch"/>
+
+  <!-- Start the grasping demo -->
+  <!-- <node name="moveit_grasps_demo" pkg="moveit_grasps"
+        type="moveit_grasps_grasp_generator_demo" output="screen">
+    <param name="ee_group_name" value="endeffector"/>
+    <param name="planning_group_name" value="manipulator"/>
+    <rosparam command="load" file="$(find webots_manipulation)/config/ur5e_grasp_data.yaml"/>
+    <rosparam command="load" file="$(find webots_manipulation)/config/moveit_grasps_config.yaml"/>
+  </node> -->
 </launch>

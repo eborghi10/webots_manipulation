@@ -11,14 +11,18 @@
   <arg name="max_payload"  default="10.0" doc="upper payload bound for the robot" />
 
   <!-- send robot urdf to param server -->
-  <include file="$(find ur_e_description)/launch/ur5e_upload.launch">
-    <arg name="limited" value="$(arg limited)"/>
-  </include>
+  <include file="$(find webots_manipulation)/launch/ur5e_upload.launch"/>
 
   <!-- Robot state publisher -->
   <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
     <param name="publish_frequency" type="double" value="50.0" />
     <param name="tf_prefix" type="string" value="" />
+  </node>
+
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+    <!-- Passing these source_list, you avoid having duplicated values -->
+    <rosparam param="source_list">[/joint_states]</rosparam>
+    <rosparam param="use_gui">false</rosparam>
   </node>
 
   <!-- Fake Calibration -->

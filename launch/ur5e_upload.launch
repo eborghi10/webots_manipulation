@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<launch>
+  <param name="robot_description" command="$(find xacro)/xacro '$(find webots_manipulation)/urdf/ur5e_limited_gripper.xacro'" />
+  <!-- <param name="robot_description" command="$(find xacro)/xacro '$(find ur_e_description)/urdf/ur5e_joint_limited_robot.urdf.xacro'" /> -->
+</launch>
