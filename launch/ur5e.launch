@@ -21,7 +21,7 @@
 
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
     <!-- Passing these source_list, you avoid having duplicated values -->
-    <rosparam param="source_list">[/joint_states]</rosparam>
+    <rosparam param="source_list">[/joint_states, /robotiq_hands/left_hand/joint_states]</rosparam>
     <rosparam param="use_gui">false</rosparam>
   </node>
 
