@@ -1,9 +1,5 @@
 # TODO
 
-## Test pick and place
-
-- Enable pick_and_place.cpp example
-
 ### [Add obstacles automatically to the Planning Scene Interface](http://docs.ros.org/melodic/api/moveit_tutorials/html/doc/perception_pipeline/perception_pipeline_tutorial.html#running-the-code)
 
 ## General topics

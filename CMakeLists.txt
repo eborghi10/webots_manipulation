@@ -8,7 +8,9 @@ find_package(Boost REQUIRED system filesystem date_time thread)
 
 find_package(catkin REQUIRED COMPONENTS
   moveit_core
+  moveit_grasps
   moveit_ros_planning_interface
+  moveit_visual_tools
   roscpp
   rospy
   tf2_geometry_msgs
@@ -16,6 +18,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package(
   CATKIN_DEPENDS
+    moveit_grasps
+    moveit_visual_tools
     roscpp
     rospy
   DEPENDS
@@ -33,11 +37,45 @@ include_directories(
 )
 
 add_executable(pick_and_place src/pick_and_place.cpp)
-target_link_libraries(pick_and_place ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-install(TARGETS pick_and_place DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+target_link_libraries(pick_and_place
+  ${catkin_LIBRARIES}
+  ${Boost_LIBRARIES}
+  ${EIGEN3_LIBRARIES}
+)
+
+# Demo grasp executable
+add_executable(grasp_generator_demo src/grasp_generator_demo.cpp)
+target_link_libraries(grasp_generator_demo
+  ${catkin_LIBRARIES}
+  ${Boost_LIBRARIES}
+  ${EIGEN3_LIBRARIES}
+)
+
+# Demo grasp pipeline
+add_executable(grasp_pipeline_demo src/grasp_pipeline_demo.cpp)
+target_link_libraries(grasp_pipeline_demo
+  ${catkin_LIBRARIES}
+  ${Boost_LIBRARIES}
+)
+
+# Motion planning pipeline
+add_executable(motion_planning_pipeline_demo src/motion_planning_pipeline_demo.cpp)
+target_link_libraries(motion_planning_pipeline_demo ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+install(TARGETS
+    grasp_generator_demo
+    grasp_pipeline_demo
+    motion_planning_pipeline_demo
+    pick_and_place
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 install(DIRECTORY
+    config
     launch
+    urdf
+    worlds
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 

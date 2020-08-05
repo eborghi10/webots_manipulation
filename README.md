@@ -37,10 +37,22 @@ roslaunch webots_manipulation minimal.launch
 roslaunch webots_manipulation complete.launch
 ```
 
-### Pick and place
+### [Old] Pick and place
 
 ```bash
 rosrun webots_manipulation pick_and_place
+```
+
+### Grasping generator and pipeline
+
+```bash
+roslaunch webots_manipulation grasp_pipeline.launch
+```
+
+### Motion planning pipeline
+
+```bash
+roslaunch webots_manipulation motion_planning_pipeline.launch
 ```
 
 ---

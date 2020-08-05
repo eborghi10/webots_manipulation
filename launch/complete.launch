@@ -4,7 +4,10 @@
   <arg name="mode"   default="realtime" doc="Startup mode"/>
   <arg name="no-gui" default="false"    doc="Start Webots with minimal GUI"/>
 
-  <include file="$(find webots_manipulation)/launch/minimal.launch"/>
+  <include file="$(find webots_manipulation)/launch/minimal.launch">
+    <arg name="mode"   value="$(arg mode)"/>
+    <arg name="no-gui" value="$(arg no-gui)"/>
+  </include>
 
   <!-- MoveIt! planning execution -->
   <include file="$(find ur5_e_moveit_config)/launch/planning_execution.launch"/>
@@ -17,12 +20,4 @@
   <!-- Depth-to-RGB registration and processing -->
   <include file="$(find webots_manipulation)/launch/kinect.launch"/>
 
-  <!-- Start the grasping demo -->
-  <!-- <node name="moveit_grasps_demo" pkg="moveit_grasps"
-        type="moveit_grasps_grasp_generator_demo" output="screen">
-    <param name="ee_group_name" value="endeffector"/>
-    <param name="planning_group_name" value="manipulator"/>
-    <rosparam command="load" file="$(find webots_manipulation)/config/ur5e_grasp_data.yaml"/>
-    <rosparam command="load" file="$(find webots_manipulation)/config/moveit_grasps_config.yaml"/>
-  </node> -->
 </launch>
