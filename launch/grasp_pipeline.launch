@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- GDB Debug Arguments -->
+  <arg name="debug" default="false" />
+  <arg unless="$(arg debug)" name="launch_prefix" value="" />
+  <arg     if="$(arg debug)" name="launch_prefix"
+           value="gdb -x $(find webots_manipulation)/launch/gdb_settings.gdb --ex run --args" />
+
+  <!-- Verbose mode -->
+  <arg name="verbose" default="false" />
+  <arg unless="$(arg verbose)" name="command_args" value="" />
+  <arg     if="$(arg verbose)" name="command_args" value="--verbose" />
+
+  <!-- Callgrind Arguments -->
+  <arg name="callgrind" default="false" />
+  <arg unless="$(arg callgrind)" name="launch_prefix2" value="" />
+  <arg     if="$(arg callgrind)" name="launch_prefix2" value="valgrind --tool=callgrind --collect-atstart=no" />
+
+  <!-- Valgrind Arguments -->
+  <arg name="valgrind" default="false" />
+  <arg unless="$(arg valgrind)" name="launch_prefix3" value="" />
+  <arg     if="$(arg valgrind)" name="launch_prefix3" value="valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins=yes -v" />
+
+  <!-- Grasping generator demo -->
+  <!-- <node name="grasp_generator_demo" pkg="webots_manipulation"
+        launch-prefix="$(arg launch_prefix) $(arg launch_prefix2) $(arg launch_prefix3)"
+        type="grasp_generator_demo" output="screen">
+    <param name="ee_group_name" value="endeffector"/>
+    <param name="planning_group_name" value="manipulator"/>
+    <rosparam command="load" file="$(find webots_manipulation)/config/ur5e_grasp_data.yaml"/>
+    <rosparam command="load" file="$(find webots_manipulation)/config/moveit_grasps_config.yaml"/>
+  </node> -->
+
+  <arg name="planning_plugin" value="ompl_interface/OMPLPlanner" />
+  <arg name="planning_adapters" value="default_planner_request_adapters/AddTimeParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints" />
+
+  <!-- Grasping pipeline demo -->
+  <node name="grasp_pipeline_demo" pkg="webots_manipulation"
+        launch-prefix="$(arg launch_prefix) $(arg launch_prefix2) $(arg launch_prefix3)"
+        type="grasp_pipeline_demo" output="screen" args="$(arg command_args)">
+    <param name="gripper" value="two_finger"/>
+    <param name="ee_group_name" value="endeffector"/>
+    <param name="planning_group_name" value="manipulator"/>
+
+    <param name="planning_plugin" value="chomp_interface/CHOMPPlanner"/>
+
+    <param name="planning_plugin" value="$(arg planning_plugin)" />
+    <param name="request_adapters" value="$(arg planning_adapters)" />
+
+    <rosparam command="load" file="$(find webots_manipulation)/config/ur5e_grasp_data.yaml"/>
+    <rosparam command="load" file="$(find webots_manipulation)/config/moveit_grasps_config.yaml"/>
+  </node>
+</launch>
