@@ -111,7 +111,7 @@ int main(int argc, char** argv)
 
   // Start the demo
   // ^^^^^^^^^^^^^^^^^^^^^^^^^
-  visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to start the demo");
+  visual_tools.prompt("[1] PLANNING TO A POSE GOAL");
 
   // Planning to a Pose goal
   // ^^^^^^^^^^^^^^^^^^^^^^^
@@ -141,7 +141,7 @@ int main(int argc, char** argv)
   visual_tools.publishText(text_pose, "Pose Goal", rvt::WHITE, rvt::XLARGE);
   visual_tools.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
   visual_tools.trigger();
-  visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to continue the demo");
+  visual_tools.prompt("[1] Press 'next' to move the robot.");
 
   // Moving to a pose goal
   // ^^^^^^^^^^^^^^^^^^^^^
@@ -153,9 +153,9 @@ int main(int argc, char** argv)
   // not use that function in this tutorial since it is
   // a blocking function and requires a controller to be active
   // and report success on execution of a trajectory.
-
-  /* Uncomment below line when working with a real robot */
   move_group.move();
+
+  visual_tools.prompt("[2] PLANNING TO A JOINT-STATE GOAL");
 
   // Planning to a joint-space goal
   // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -190,10 +190,11 @@ int main(int argc, char** argv)
   visual_tools.publishText(text_pose, "Joint Space Goal", rvt::WHITE, rvt::XLARGE);
   visual_tools.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
   visual_tools.trigger();
+  visual_tools.prompt("[2] Press 'next' to move the robot.");
 
   move_group.move();
 
-  visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to continue the demo");
+  visual_tools.prompt("[3] PLANNING WITH PATH CONSTRAINTS");
 
   // Planning with Path Constraints
   // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -246,15 +247,14 @@ int main(int argc, char** argv)
   visual_tools.publishText(text_pose, "Constrained Goal", rvt::WHITE, rvt::XLARGE);
   visual_tools.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
   visual_tools.trigger();
+  visual_tools.prompt("[3] Press 'next' to move the robot.");
 
   move_group.move();
 
-  visual_tools.prompt("next step");
+  visual_tools.prompt("[4] CARTESIAN PATHS");
 
   // When done with the path constraint be sure to clear it.
   move_group.clearPathConstraints();
-
-  return 0;
 
   // Cartesian Paths
   // ^^^^^^^^^^^^^^^
@@ -263,9 +263,9 @@ int main(int argc, char** argv)
   // from the new start state above.  The initial pose (start state) does not
   // need to be added to the waypoint list but adding it can help with visualizations
   std::vector<geometry_msgs::Pose> waypoints;
-  waypoints.push_back(start_pose2);
+  waypoints.push_back(target_pose1);
 
-  geometry_msgs::Pose target_pose3 = start_pose2;
+  geometry_msgs::Pose target_pose3 = target_pose1;
 
   target_pose3.position.z -= 0.2;
   waypoints.push_back(target_pose3);  // down
@@ -286,6 +286,7 @@ int main(int argc, char** argv)
   moveit_msgs::RobotTrajectory trajectory;
   const double jump_threshold = 0.0;
   const double eef_step = 0.01;
+  move_group.setStartState(*move_group.getCurrentState());
   double fraction = move_group.computeCartesianPath(waypoints, eef_step, jump_threshold, trajectory);
   ROS_INFO_NAMED("tutorial", "Visualizing plan 4 (Cartesian path) (%.2f%% acheived)", fraction * 100.0);
 
@@ -296,7 +297,7 @@ int main(int argc, char** argv)
   for (std::size_t i = 0; i < waypoints.size(); ++i)
     visual_tools.publishAxisLabeled(waypoints[i], "pt" + std::to_string(i), rvt::SMALL);
   visual_tools.trigger();
-  visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to continue the demo");
+  visual_tools.prompt("[4] Press 'next' to move the robot.");
 
   // Cartesian motions should often be slow, e.g. when approaching objects. The speed of cartesian
   // plans cannot currently be set through the maxVelocityScalingFactor, but requires you to time
@@ -305,6 +306,8 @@ int main(int argc, char** argv)
 
   // You can execute a trajectory like this.
   move_group.execute(trajectory);
+
+  ROS_INFO("[5] ADDING/REMOVING OBJECTS AND ATTACHING/DETACHING OBJECTS");
 
   // Adding/Removing Objects and Attaching/Detaching Objects
   // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -347,7 +350,7 @@ int main(int argc, char** argv)
   visual_tools.trigger();
 
   // Wait for MoveGroup to receive and process the collision object message
-  visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to once the collision object appears in RViz");
+  visual_tools.prompt("[5] Press 'next' in the RvizVisualToolsGui window to once the collision object appears in RViz");
 
   // Now when we plan a trajectory it will avoid the obstacle
   move_group.setStartState(*move_group.getCurrentState());
