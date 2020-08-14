@@ -45,28 +45,18 @@ target_link_libraries(pick_and_place
 
 # Demo grasp executable
 add_executable(grasp_generator_demo src/grasp_generator_demo.cpp)
-target_link_libraries(grasp_generator_demo
-  ${catkin_LIBRARIES}
-  ${Boost_LIBRARIES}
-  ${EIGEN3_LIBRARIES}
-)
+target_link_libraries(grasp_generator_demo ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 # Demo grasp pipeline
 add_executable(grasp_pipeline_demo src/grasp_pipeline_demo.cpp)
-target_link_libraries(grasp_pipeline_demo
-  ${catkin_LIBRARIES}
-  ${Boost_LIBRARIES}
-)
+target_link_libraries(grasp_pipeline_demo ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 # Move group interface demo
 add_executable(move_group_interface_demo src/demo/move_group_interface.cpp)
-target_link_libraries(move_group_interface_demo
-  ${catkin_LIBRARIES}
-  ${Boost_LIBRARIES}
-)
+target_link_libraries(move_group_interface_demo ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 # Motion planning pipeline
-add_executable(motion_planning_pipeline_demo src/motion_planning_pipeline_demo.cpp)
+add_executable(motion_planning_pipeline_demo src/demo/motion_planning_pipeline.cpp)
 target_link_libraries(motion_planning_pipeline_demo ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 install(TARGETS

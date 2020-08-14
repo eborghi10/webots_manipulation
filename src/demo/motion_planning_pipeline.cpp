@@ -38,6 +38,7 @@
 #include <ros/ros.h>
 
 // MoveIt
+#include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/robot_model_loader/robot_model_loader.h>
 #include <moveit/planning_pipeline/planning_pipeline.h>
 #include <moveit/planning_interface/planning_interface.h>
@@ -66,6 +67,11 @@ int main(int argc, char** argv)
   //     http://docs.ros.org/indigo/api/moveit_ros_planning/html/classrobot__model__loader_1_1RobotModelLoader.html
   robot_model_loader::RobotModelLoader robot_model_loader("robot_description");
   robot_model::RobotModelPtr robot_model = robot_model_loader.getModel();
+
+  // Load the move_group interface
+  const std::string planning_group_name_ = "manipulator";
+  moveit::planning_interface::MoveGroupInterfacePtr move_group_ =
+      std::make_shared<moveit::planning_interface::MoveGroupInterface>(planning_group_name_);
 
   // Using the :moveit_core:`RobotModel`, we can construct a
   // :planning_scene:`PlanningScene` that maintains the state of
@@ -131,7 +137,7 @@ int main(int argc, char** argv)
   //
   // .. _kinematic_constraints:
   //     http://docs.ros.org/indigo/api/moveit_core/html/namespacekinematic__constraints.html#a88becba14be9ced36fefc7980271e132
-  req.group_name = "manipulator";
+  req.group_name = planning_group_name_;
   moveit_msgs::Constraints pose_goal =
       kinematic_constraints::constructGoalConstraints("wrist_3_link", pose, tolerance_pose, tolerance_angle);
   req.goal_constraints.push_back(pose_goal);
@@ -163,17 +169,22 @@ int main(int argc, char** argv)
   /* Wait for user input */
   visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to continue the demo");
 
+  // Move robot
+  move_group_->execute(response.trajectory);
+
+  visual_tools.prompt("Press 'next' to continue");
+
   // Joint Space Goals
   // ^^^^^^^^^^^^^^^^^
   /* First, set the state in the planning scene to the final state of the last plan */
   robot_state::RobotState& robot_state = planning_scene->getCurrentStateNonConst();
   planning_scene->setCurrentState(response.trajectory_start);
-  const robot_model::JointModelGroup* joint_model_group = robot_state.getJointModelGroup("manipulator");
+  const robot_model::JointModelGroup* joint_model_group = robot_state.getJointModelGroup(planning_group_name_);
   robot_state.setJointGroupPositions(joint_model_group, response.trajectory.joint_trajectory.points.back().positions);
 
   // Now, setup a joint space goal
   robot_state::RobotState goal_state(robot_model);
-  std::vector<double> joint_values = { -1.0, 0.7, 0.7, -1.5, -0.7, 2.0, 0.0 };
+  std::vector<double> joint_values = { -2.5, -0.12, 1.0, -1.5, -0.7, 0.5 };
   goal_state.setJointGroupPositions(joint_model_group, joint_values);
   moveit_msgs::Constraints joint_goal = kinematic_constraints::constructGoalConstraints(goal_state, joint_model_group);
 
@@ -199,6 +210,11 @@ int main(int argc, char** argv)
   /* Wait for user input */
   visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to continue the demo");
 
+  // Move robot
+  move_group_->execute(response.trajectory);
+
+  visual_tools.prompt("Press 'next' to continue");
+
   // Using a Planning Request Adapter
   // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   // A planning request adapter allows us to specify a series of operations that
@@ -213,9 +229,9 @@ int main(int argc, char** argv)
   // Now, set one of the joints slightly outside its upper limit
   const robot_model::JointModel* joint_model = joint_model_group->getJointModel("wrist_3_joint");
   const robot_model::JointModel::Bounds& joint_bounds = joint_model->getVariableBounds();
-  std::vector<double> tmp_values(1, 0.0);
-  tmp_values[0] = joint_bounds[0].min_position_ - 0.01;
-  robot_state.setJointPositions(joint_model, tmp_values);
+  // std::vector<double> tmp_values(1, 0.0);
+  // tmp_values[0] = joint_bounds[0].min_position_ - 0.01;
+  // robot_state.setJointPositions(joint_model, tmp_values);
   req.goal_constraints.clear();
   req.goal_constraints.push_back(pose_goal);
 
@@ -235,7 +251,12 @@ int main(int argc, char** argv)
   display_publisher.publish(display_trajectory);
 
   /* Wait for user input */
-  visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to finish the demo");
+  visual_tools.prompt("Press 'next' in the RvizVisualToolsGui window to move the robot");
+
+  // Move robot
+  move_group_->execute(response.trajectory);
+
+  visual_tools.prompt("Press 'next' to finish the demo");
 
   ROS_INFO("Done");
   return 0;
