@@ -7,7 +7,7 @@ The `webots_manipulation` package contains training code of Webots with MoveIt!.
 - Build a dockerfile from `webots_docker`. Instructions in that repo.
 - Organize the project like this:
 
-```
+```no-lang
 worskpace
 |
 |___webots_docker

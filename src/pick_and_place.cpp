@@ -62,9 +62,9 @@ void openGripper(trajectory_msgs::JointTrajectory& posture)
   /* Set them as open, wide enough for the object to fit. */
   posture.points.resize(1);
   posture.points[0].positions.resize(3);
-  posture.points[0].positions[0] = 0.0495;
-  posture.points[0].positions[1] = 0.0495;
-  posture.points[0].positions[2] = 0.0495;
+  posture.points[0].positions[0] = 0.05;
+  posture.points[0].positions[1] = 0.05;
+  posture.points[0].positions[2] = 0.05;
   posture.points[0].time_from_start = ros::Duration(0.5);
 }
 
@@ -79,9 +79,9 @@ void closedGripper(trajectory_msgs::JointTrajectory& posture)
   /* Set them as closed. */
   posture.points.resize(1);
   posture.points[0].positions.resize(2);
-  posture.points[0].positions[0] = 1.2218;
-  posture.points[0].positions[1] = 1.2218;
-  posture.points[0].positions[2] = 1.2218;
+  posture.points[0].positions[0] = 1.2;
+  posture.points[0].positions[1] = 1.2;
+  posture.points[0].positions[2] = 1.2;
   posture.points[0].time_from_start = ros::Duration(0.5);
 }
 
@@ -100,10 +100,11 @@ void pick(moveit::planning_interface::MoveGroupInterface& move_group,
   tf2::Quaternion orientation;
   orientation.setRPY(0.0, 0.0, -M_PI_2);
   grasps[0].grasp_pose.pose.orientation = tf2::toMsg(orientation);
-  grasps[0].grasp_pose.pose.position.x = 0.415;
+  grasps[0].grasp_pose.pose.position.x = 0.3;
   grasps[0].grasp_pose.pose.position.y = 0.0;
   grasps[0].grasp_pose.pose.position.z = 0.5;
 
+  // Visualize grasp pose
   const moveit::core::JointModelGroup* ee_jmg = visual_tools->getRobotModel()->getJointModelGroup("endeffector");
   grasp_visuals->publishAxisLabeled(grasps[0].grasp_pose.pose, "GRASP POSE");
   visual_tools->publishEEMarkers(grasps[0].grasp_pose.pose, ee_jmg,
@@ -139,7 +140,13 @@ void pick(moveit::planning_interface::MoveGroupInterface& move_group,
   // Set support surface as table1.
   move_group.setSupportSurfaceName("table1");
   // Call pick to pick up the object using the grasps given
+  move_group.attachObject("object");
   move_group.pick("object", grasps);
+
+  // move_group.setPoseTarget(grasps[0].grasp_pose.pose);
+  // moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+  // bool success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+  // move_group.move();
 }
 
 void place(moveit::planning_interface::MoveGroupInterface& group)
@@ -214,9 +221,9 @@ void addCollisionObjects(moveit::planning_interface::PlanningSceneInterface& pla
 
   /* Define the pose of the table. */
   collision_objects[0].primitive_poses.resize(1);
-  collision_objects[0].primitive_poses[0].position.x = 0.2;
-  collision_objects[0].primitive_poses[0].position.y = -0.5;
-  collision_objects[0].primitive_poses[0].position.z = 0.4;
+  collision_objects[0].primitive_poses[0].position.x = 0.7;
+  collision_objects[0].primitive_poses[0].position.y = 0.0;
+  collision_objects[0].primitive_poses[0].position.z = 0.25;
   collision_objects[0].primitive_poses[0].orientation.w = 1.0;
 
   collision_objects[0].operation = collision_objects[0].ADD;
@@ -250,13 +257,13 @@ void addCollisionObjects(moveit::planning_interface::PlanningSceneInterface& pla
   collision_objects[2].primitives.resize(1);
   collision_objects[2].primitives[0].type = collision_objects[1].primitives[0].BOX;
   collision_objects[2].primitives[0].dimensions.resize(3);
-  collision_objects[2].primitives[0].dimensions[0] = 0.05;
-  collision_objects[2].primitives[0].dimensions[1] = 0.05;
-  collision_objects[2].primitives[0].dimensions[2] = 0.05;
+  collision_objects[2].primitives[0].dimensions[0] = 0.1;
+  collision_objects[2].primitives[0].dimensions[1] = 0.1;
+  collision_objects[2].primitives[0].dimensions[2] = 0.1;
 
   /* Define the pose of the object. */
   collision_objects[2].primitive_poses.resize(1);
-  collision_objects[2].primitive_poses[0].position.x = 0.8;
+  collision_objects[2].primitive_poses[0].position.x = 0.7;
   collision_objects[2].primitive_poses[0].position.y = 0.0;
   collision_objects[2].primitive_poses[0].position.z = 0.5;
   collision_objects[2].primitive_poses[0].orientation.w = 1.0;
@@ -304,7 +311,7 @@ int main(int argc, char** argv)
 
   addCollisionObjects(planning_scene_interface);
 
-  // Move the arm up
+  // Move the arm up to avoid collisions with the tables
   group.setStartState(*group.getCurrentState());
   group.setNamedTarget("up");
   group.move();

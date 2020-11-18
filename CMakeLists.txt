@@ -59,12 +59,21 @@ target_link_libraries(move_group_interface_demo ${catkin_LIBRARIES} ${Boost_LIBR
 add_executable(motion_planning_pipeline_demo src/demo/motion_planning_pipeline.cpp)
 target_link_libraries(motion_planning_pipeline_demo ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
+add_executable(pick_box_demo src/demo/pick_box.cpp)
+target_link_libraries(pick_box_demo ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+# Gripper demo
+add_executable(gripper_demo src/demo/gripper.cpp)
+target_link_libraries(gripper_demo ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
 install(TARGETS
     grasp_generator_demo
     grasp_pipeline_demo
+    gripper_demo
     motion_planning_pipeline_demo
     move_group_interface_demo
     pick_and_place
+    pick_box_demo
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

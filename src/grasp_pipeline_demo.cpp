@@ -41,6 +41,8 @@
 #include <ros/assert.h>
 
 // MoveIt
+#include <moveit/move_group_interface/move_group_interface.h>
+#include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit/robot_state/robot_state.h>
 #include <moveit/planning_scene_monitor/planning_scene_monitor.h>
 #include <moveit/kinematic_constraints/utils.h>
@@ -52,9 +54,9 @@
 #include <moveit_visual_tools/moveit_visual_tools.h>
 
 // Grasp
-#include <moveit_grasps/two_finger_grasp_generator.h>
-#include <moveit_grasps/two_finger_grasp_data.h>
-#include <moveit_grasps/two_finger_grasp_filter.h>
+#include <moveit_grasps/grasp_generator.h>
+#include <moveit_grasps/grasp_data.h>
+#include <moveit_grasps/grasp_filter.h>
 #include <moveit_grasps/grasp_planner.h>
 
 // Parameter loading
@@ -104,7 +106,7 @@ public:
   {
     // ---------------------------------------------------------------------------------------------
     // Load planning scene to share
-    planning_scene_monitor_ = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>("robot_description");
+    planning_scene_monitor_.reset(new planning_scene_monitor::PlanningSceneMonitor("robot_description"));
     if (!planning_scene_monitor_->getPlanningScene())
     {
       ROS_ERROR_STREAM_NAMED(LOGNAME, "Planning scene not configured");
@@ -115,7 +117,11 @@ public:
     planning_scene_monitor_->getPlanningScene()->setName("grasping_planning_scene");
 
     robot_model_loader::RobotModelLoaderPtr robot_model_loader;
-    robot_model_loader = std::make_shared<robot_model_loader::RobotModelLoader>("robot_description");
+    robot_model_loader.reset(new robot_model_loader::RobotModelLoader("robot_description"));
+
+    // Load the move_group interfaces
+    arm_group_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(planning_group_name_);
+    hand_group_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(ee_group_name_);
 
     // Load the robot model
     robot_model_ = robot_model_loader->getModel();
@@ -127,11 +133,11 @@ public:
 
     // ---------------------------------------------------------------------------------------------
     // Load the Robot Viz Tools for publishing to Rviz
-    visual_tools_ = std::make_shared<moveit_visual_tools::MoveItVisualTools>(
-        robot_model_->getModelFrame(), "/rviz_visual_tools", planning_scene_monitor_);
+    visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools(robot_model_->getModelFrame(), "/rviz_visual_tools",
+                                                                   planning_scene_monitor_));
     visual_tools_->loadMarkerPub();
-    visual_tools_->loadRobotStatePub("/display_robot_state");
-    visual_tools_->loadTrajectoryPub("/display_planned_path");
+    visual_tools_->loadRobotStatePub("/move_group/display_robot_state");
+    visual_tools_->loadTrajectoryPub("/move_group/display_planned_path");
     visual_tools_->loadSharedRobotState();
     visual_tools_->enableBatchPublishing();
     visual_tools_->deleteAllMarkers();
@@ -148,52 +154,44 @@ public:
   {
     // ---------------------------------------------------------------------------------------------
     // Load grasp data specific to our robot
-    grasp_data_ =
-        std::make_shared<moveit_grasps::TwoFingerGraspData>(nh_, ee_group_name_, visual_tools_->getRobotModel());
-    if (!grasp_data_->loadGraspData(nh_, ee_group_name_))
-    {
-      ROS_ERROR_STREAM_NAMED(LOGNAME, "Failed to load Grasp Data parameters.");
-      exit(-1);
-    }
+    grasp_data_.reset(new moveit_grasps::GraspData(nh_, ee_group_name_, visual_tools_->getRobotModel()));
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp generator
-    grasp_generator_ = std::make_shared<moveit_grasps::TwoFingerGraspGenerator>(visual_tools_);
+    grasp_generator_.reset(new moveit_grasps::GraspGenerator(visual_tools_));
 
     // Set the ideal grasp orientation for scoring
     std::vector<double> ideal_grasp_rpy = { 3.14, 0.0, 0.0 };
     grasp_generator_->setIdealTCPGraspPoseRPY(ideal_grasp_rpy);
 
     // Set custom grasp score weights
-    auto grasp_score_weights = std::make_shared<moveit_grasps::TwoFingerGraspScoreWeights>();
-    grasp_score_weights->orientation_x_score_weight_ = 2.0;
-    grasp_score_weights->orientation_y_score_weight_ = 2.0;
-    grasp_score_weights->orientation_z_score_weight_ = 2.0;
-    grasp_score_weights->translation_x_score_weight_ = 1.0;
-    grasp_score_weights->translation_y_score_weight_ = 1.0;
-    grasp_score_weights->translation_z_score_weight_ = 1.0;
+    moveit_grasps::GraspScoreWeights grasp_score_weights;
+    grasp_score_weights.orientation_x_score_weight_ = 2.0;
+    grasp_score_weights.orientation_y_score_weight_ = 2.0;
+    grasp_score_weights.orientation_z_score_weight_ = 2.0;
+    grasp_score_weights.translation_x_score_weight_ = 1.0;
+    grasp_score_weights.translation_y_score_weight_ = 1.0;
+    grasp_score_weights.translation_z_score_weight_ = 1.0;
     // Finger gripper specific weights.
-    grasp_score_weights->depth_score_weight_ = 2.0;
-    grasp_score_weights->width_score_weight_ = 2.0;
+    grasp_score_weights.depth_score_weight_ = 2.0;
+    grasp_score_weights.width_score_weight_ = 2.0;
     // Assign the grasp score weights in the grasp_generator
     grasp_generator_->setGraspScoreWeights(grasp_score_weights);
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp filter
-    grasp_filter_ =
-        std::make_shared<moveit_grasps::TwoFingerGraspFilter>(visual_tools_->getSharedRobotState(), visual_tools_);
+    grasp_filter_.reset(new moveit_grasps::GraspFilter(visual_tools_->getSharedRobotState(), visual_tools_));
 
     // ---------------------------------------------------------------------------------------------
     // Load grasp planner for approach, lift and retreat planning
-    grasp_planner_ = std::make_shared<moveit_grasps::GraspPlanner>(visual_tools_);
+    grasp_planner_.reset(new moveit_grasps::GraspPlanner(visual_tools_));
 
     // MoveIt Grasps allows for a manual breakpoint debugging tool to be optionally passed in
     // grasp_planner_->setWaitForNextStepCallback(boost::bind(&waitForNextStep, visual_tools_, _1));
 
     // -----------------------------------------------------
     // Load the motion planning pipeline
-    planning_pipeline_ =
-        std::make_shared<planning_pipeline::PlanningPipeline>(robot_model_, nh_, "planning_plugin", "request_adapter");
+    planning_pipeline_.reset(new planning_pipeline::PlanningPipeline(robot_model_, nh_, "planning_plugin", "request_adapters"));
   }
 
   bool demoRandomGrasp()
@@ -211,22 +209,23 @@ public:
       return false;
     }
 
+    setACMFingerEntry(object_name, true);
+
     // -----------------------------------
     // Generate grasp candidates
     std::vector<moveit_grasps::GraspCandidatePtr> grasp_candidates;
 
     // Configure the desired types of grasps
-    moveit_grasps::TwoFingerGraspCandidateConfig grasp_generator_config =
-        moveit_grasps::TwoFingerGraspCandidateConfig();
+    moveit_grasps::GraspCandidateConfig grasp_generator_config =
+        moveit_grasps::GraspCandidateConfig();
     grasp_generator_config.disableAll();
     grasp_generator_config.enable_face_grasps_ = true;
     grasp_generator_config.generate_y_axis_grasps_ = true;
     grasp_generator_config.generate_x_axis_grasps_ = true;
     grasp_generator_config.generate_z_axis_grasps_ = true;
 
-    grasp_generator_->setGraspCandidateConfig(grasp_generator_config);
     if (!grasp_generator_->generateGrasps(visual_tools_->convertPose(object_pose), object_x_depth, object_y_width,
-                                          object_z_height, grasp_data_, grasp_candidates))
+                                          object_z_height, grasp_data_, grasp_candidates, grasp_generator_config))
     {
       ROS_ERROR_NAMED(LOGNAME, "Grasp generator failed to generate any valid grasps");
       return false;
@@ -234,8 +233,7 @@ public:
 
     // --------------------------------------------
     // Generating a seed state for filtering grasps
-    robot_state::RobotStatePtr seed_state =
-        std::make_shared<robot_state::RobotState>(*visual_tools_->getSharedRobotState());
+    robot_state::RobotStatePtr seed_state(new robot_state::RobotState(*visual_tools_->getSharedRobotState()));
     Eigen::Isometry3d eef_mount_grasp_pose =
         visual_tools_->convertPose(object_pose) * grasp_data_->tcp_to_eef_mount_.inverse();
     if (!getIKSolution(arm_jmg_, eef_mount_grasp_pose, *seed_state, grasp_data_->parent_link_->getName()))
@@ -247,8 +245,7 @@ public:
     // Filtering grasps
     // Note: This step also solves for the grasp and pre-grasp states and stores them in grasp candidates)
     bool filter_pregrasps = true;
-    if (!grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_, seed_state, filter_pregrasps,
-                                     object_name))
+    if (!grasp_filter_->filterGrasps(grasp_candidates, planning_scene_monitor_, arm_jmg_, seed_state, filter_pregrasps))
     {
       ROS_ERROR_STREAM_NAMED(LOGNAME, "Filter grasps failed");
       return false;
@@ -263,13 +260,15 @@ public:
     // Plan free-space approach, cartesian approach, lift and retreat trajectories
     moveit_grasps::GraspCandidatePtr selected_grasp_candidate;
     moveit_msgs::MotionPlanResponse pre_approach_plan;
-    if (!planFullGrasp(grasp_candidates, selected_grasp_candidate, pre_approach_plan, object_name))
+    if (!planFullGrasp(grasp_candidates, selected_grasp_candidate, pre_approach_plan))
     {
       ROS_ERROR_STREAM_NAMED(LOGNAME, "Failed to plan grasp motions");
       return false;
     }
 
     visualizePick(selected_grasp_candidate, pre_approach_plan);
+
+    setACMFingerEntry(object_name, false);
 
     return true;
   }
@@ -289,12 +288,10 @@ public:
 
     // Get the pre and post grasp states
     // visual_tools_->prompt("pre_grasp");
-    robot_state::RobotStatePtr pre_grasp_state =
-        std::make_shared<robot_state::RobotState>(*visual_tools_->getSharedRobotState());
+    robot_state::RobotStatePtr pre_grasp_state(new robot_state::RobotState(*visual_tools_->getSharedRobotState()));
     valid_grasp_candidate->getPreGraspState(pre_grasp_state);
     visual_tools_->publishRobotState(pre_grasp_state, rviz_visual_tools::ORANGE);
-    robot_state::RobotStatePtr grasp_state =
-        std::make_shared<robot_state::RobotState>(*visual_tools_->getSharedRobotState());
+    robot_state::RobotStatePtr grasp_state(new robot_state::RobotState(*visual_tools_->getSharedRobotState()));
     if (valid_grasp_candidate->getGraspStateClosed(grasp_state))
     {
       // visual_tools_->prompt("grasp");
@@ -321,32 +318,52 @@ public:
 
     bool wait_for_animation = true;
     visual_tools_->publishTrajectoryPath(pre_approach_plan.trajectory, pre_grasp_state, wait_for_animation);
-    ros::Duration(0.25).sleep();
+    visual_tools_->trigger();
+    arm_group_->execute(pre_approach_plan.trajectory);
+
     if (valid_grasp_candidate->segmented_cartesian_traj_.size() > moveit_grasps::APPROACH)
+    {
       visual_tools_->publishTrajectoryPath(valid_grasp_candidate->segmented_cartesian_traj_[moveit_grasps::APPROACH],
                                            valid_grasp_candidate->grasp_data_->arm_jmg_, wait_for_animation);
-    ros::Duration(0.25).sleep();
+      // Publish grasp marker
+      // visual_tools_->publishEEMarkers(waypoints[0], valid_grasp_candidate->grasp_data_->arm_jmg_,
+      //                            rviz_visual_tools::BLUE);
+      // visual_tools_->trigger();
+    }
 
     if (valid_grasp_candidate->segmented_cartesian_traj_.size() > moveit_grasps::LIFT)
+    {
       visual_tools_->publishTrajectoryPath(valid_grasp_candidate->segmented_cartesian_traj_[moveit_grasps::LIFT],
                                            valid_grasp_candidate->grasp_data_->arm_jmg_, wait_for_animation);
-    ros::Duration(0.25).sleep();
+      // arm_group_->execute(valid_grasp_candidate->segmented_cartesian_traj_[moveit_grasps::LIFT]);
+    }
 
     if (valid_grasp_candidate->segmented_cartesian_traj_.size() > moveit_grasps::RETREAT)
+    {
       visual_tools_->publishTrajectoryPath(valid_grasp_candidate->segmented_cartesian_traj_[moveit_grasps::RETREAT],
                                            valid_grasp_candidate->grasp_data_->arm_jmg_, wait_for_animation);
-    ros::Duration(0.25).sleep();
+      // arm_group_->execute(valid_grasp_candidate->segmented_cartesian_traj_[moveit_grasps::RETREAT]);
+    }
+
+    // Move robot
+    // Convert the valid_grasp_candidate into a format moveit_visual_tools can use
+    ROS_WARN("TRYING TO GRASP OBJECT");
+    // Grasp
+    std::vector<moveit_msgs::Grasp> grasps;
+    grasps.push_back(valid_grasp_candidate->grasp_);
+    arm_group_->attachObject("pick_target");
+    arm_group_->pick("pick_target", grasps);
   }
 
   bool planFullGrasp(std::vector<moveit_grasps::GraspCandidatePtr>& grasp_candidates,
                      moveit_grasps::GraspCandidatePtr& valid_grasp_candidate,
-                     moveit_msgs::MotionPlanResponse& pre_approach_plan, const std::string& object_name)
+                     moveit_msgs::MotionPlanResponse& pre_approach_plan)
   {
     moveit::core::RobotStatePtr current_state;
     {
       boost::scoped_ptr<planning_scene_monitor::LockedPlanningSceneRW> ls(
           new planning_scene_monitor::LockedPlanningSceneRW(planning_scene_monitor_));
-      current_state = std::make_shared<robot_state::RobotState>((*ls)->getCurrentState());
+      current_state.reset(new moveit::core::RobotState((*ls)->getCurrentState()));
     }
 
     bool success = false;
@@ -354,8 +371,7 @@ public:
     {
       valid_grasp_candidate = grasp_candidates.front();
       valid_grasp_candidate->getPreGraspState(current_state);
-      if (!grasp_planner_->planApproachLiftRetreat(valid_grasp_candidate, current_state, planning_scene_monitor_, false,
-                                                   object_name))
+      if (!grasp_planner_->planApproachLiftRetreat(valid_grasp_candidate, current_state, planning_scene_monitor_, false))
       {
         ROS_INFO_NAMED(LOGNAME, "failed to plan approach lift retreat");
         continue;
@@ -373,6 +389,20 @@ public:
       break;
     }
     return success;
+  }
+
+  void setACMFingerEntry(const std::string& object_name, bool allowed)
+  {
+    planning_scene_monitor::LockedPlanningSceneRW scene(planning_scene_monitor_);  // Lock planning scene
+
+    // Get links of end effector
+    const std::vector<std::string>& ee_links = grasp_data_->ee_jmg_->getLinkModelNames();
+
+    // Set collision checking between fingers and object
+    for (std::size_t i = 0; i < ee_links.size(); ++i)
+    {
+      scene->getAllowedCollisionMatrixNonConst().setEntry(object_name, ee_links[i], allowed);
+    }
   }
 
   bool planPreApproach(const robot_state::RobotState& goal_state, moveit_msgs::MotionPlanResponse& pre_approach_plan)
@@ -397,10 +427,9 @@ public:
     // Change the robot current state
     // NOTE: We have to do this since Panda start configuration is in self collision.
     robot_state::RobotState rs = (*ls)->getCurrentState();
-    std::vector<double> starting_joint_values = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
-    std::vector<std::string> joint_names = { "shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint",
-                                             "wrist_1_joint", "wrist_2_joint", "wrist_3_joint" };
-    // arm_jmg_->getActiveJointModelNames();
+    std::vector<double> starting_joint_values = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+    const std::vector<std::string> joint_names = arm_jmg_->getActiveJointModelNames();
+
     for (std::size_t i = 0; i < joint_names.size(); ++i)
     {
       rs.setJointPositions(joint_names[i], &starting_joint_values[i]);
@@ -442,12 +471,12 @@ public:
                             double& y_width, double& z_height)
   {
     // Generate random cuboid
-    double xmin = 0.5;
-    double xmax = 0.7;
-    double ymin = -0.25;
-    double ymax = 0.25;
-    double zmin = 0.2;
-    double zmax = 0.7;
+    double xmin = 0.3;
+    double xmax = 0.5;
+    double ymin = 0.25;
+    double ymax = 0.5;
+    double zmin = 0.5;
+    double zmax = 1.0;
     rviz_visual_tools::RandomPoseBounds pose_bounds(xmin, xmax, ymin, ymax, zmin, zmax);
 
     double cuboid_size_min = 0.01;
@@ -459,6 +488,22 @@ public:
     visual_tools_->publishCollisionCuboid(object_pose, x_depth, y_width, z_height, object_name, rviz_visual_tools::RED);
     visual_tools_->publishAxis(object_pose, rviz_visual_tools::MEDIUM);
     visual_tools_->trigger();
+
+    // Attach collision object
+    std::vector<moveit_msgs::CollisionObject> collision_objects;
+    collision_objects.resize(1);
+    collision_objects[0].header.frame_id = "base_link";
+    collision_objects[0].id = "pick_target";
+    collision_objects[0].primitives.resize(1);
+    collision_objects[0].primitives[0].type = collision_objects[1].primitives[0].BOX;
+    collision_objects[0].primitives[0].dimensions.resize(3);
+    collision_objects[0].primitives[0].dimensions[0] = x_depth;
+    collision_objects[0].primitives[0].dimensions[1] = y_width;
+    collision_objects[0].primitives[0].dimensions[2] = z_height;
+    collision_objects[0].primitive_poses.resize(1);
+    collision_objects[0].primitive_poses[0] = object_pose;
+    collision_objects[0].operation = collision_objects[2].ADD;
+    planning_scene_interface_.applyCollisionObjects(collision_objects);
 
     bool success = true;
     double timeout = 5;  // seconds
@@ -479,19 +524,24 @@ private:
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
 
   // MoveIt! Grasps
-  moveit_grasps::TwoFingerGraspGeneratorPtr grasp_generator_;
+  moveit_grasps::GraspGeneratorPtr grasp_generator_;
 
   // Robot-specific data for generating grasps
-  moveit_grasps::TwoFingerGraspDataPtr grasp_data_;
+  moveit_grasps::GraspDataPtr grasp_data_;
 
   // For planning approach and retreats
   moveit_grasps::GraspPlannerPtr grasp_planner_;
 
   // For selecting good grasps
-  moveit_grasps::TwoFingerGraspFilterPtr grasp_filter_;
+  moveit_grasps::GraspFilterPtr grasp_filter_;
 
   // Shared planning scene (load once for everything)
   planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
+
+  // move_group interfaces
+  moveit::planning_interface::MoveGroupInterfacePtr arm_group_;
+  moveit::planning_interface::MoveGroupInterfacePtr hand_group_;
+  moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
 
   // Arm
   const robot_model::JointModelGroup* arm_jmg_;

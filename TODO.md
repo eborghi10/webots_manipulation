@@ -1,5 +1,22 @@
 # TODO
 
+- [`moveit_grasps` tutorial](https://ros-planning.github.io/moveit_tutorials/doc/moveit_grasps/moveit_grasps_tutorial.html)
+
+  - [Baxter - Load grasp data](https://github.com/davetcoleman/baxter_cpp/blob/1e254b6dd76682f1013554cbf29412b5f6a76a81/baxter_moveit_scripts/src/send_random.cpp#L98)
+  - [`moveit_simple_grasps`](https://github.com/davetcoleman/moveit_simple_grasps#code-usage)
+  - [clam pick & place](https://github.com/davetcoleman/clam/tree/indigo-devel/clam_pick_place/src)
+  - [Generate grasps](https://github.com/pal-robotics/reem_tabletop_grasping/blob/master/src/reem_tabletop_grasping/reem_tabletop_grasping_as_impl.py#L341)
+
+- Add example using grasping action
+
+- Make grasp work with `move_group` in `grasp_pipeline_demo.cpp`:
+  https://github.com/search?l=C%2B%2B&q=move_group+pick+grasp&type=Code
+
+# Ekuthon
+
+  * http://wiki.ros.org/tabletop_objects
+  * https://github.com/carlosmccosta/object_recognition
+
 ### [Add obstacles automatically to the Planning Scene Interface](http://docs.ros.org/melodic/api/moveit_tutorials/html/doc/perception_pipeline/perception_pipeline_tutorial.html#running-the-code)
 
 ## General topics
