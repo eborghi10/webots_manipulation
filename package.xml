@@ -17,7 +17,10 @@
   <build_depend>moveit_ros_planning_interface</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>roscpp</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>tf2</build_depend>
   <build_depend>tf2_geometry_msgs</build_depend>
+  <build_depend>tf2_sensor_msgs</build_depend>
 
   <run_depend>moveit_core</run_depend>
   <run_depend>moveit_grasps</run_depend>
@@ -25,7 +28,10 @@
   <run_depend>moveit_ros_planning_interface</run_depend>
   <run_depend>rospy</run_depend>
   <run_depend>roscpp</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>tf2</run_depend>
   <run_depend>tf2_geometry_msgs</run_depend>
+  <run_depend>tf2_sensor_msgs</run_depend>
   <run_depend>universal_robot</run_depend>
 
 </package>

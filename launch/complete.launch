@@ -20,4 +20,8 @@
   <!-- Depth-to-RGB registration and processing -->
   <include file="$(find webots_manipulation)/launch/kinect.launch"/>
 
+  <!-- <include file="$(find webots_manipulation)/launch/gpd_demo.launch"/> -->
+
+  <node name="remap_pc" pkg="webots_manipulation" type="remap_pc"/>
+
 </launch>

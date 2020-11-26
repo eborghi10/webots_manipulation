@@ -22,6 +22,7 @@ Clone the following dependencies into your workspace:
 
 - [`robotiq`](https://github.com/ros-industrial/robotiq)
 - [`universal_robot`](https://github.com/eborghi10/universal_robot)
+- [`ur5_e_moveit_config`](https://github.com/eborghi10/ur5_e_moveit_config)
 
 ## Instructions
 
@@ -65,3 +66,5 @@ roslaunch webots_manipulation motion_planning_pipeline.launch
 $ rosrun moveit_commander moveit_commander_cmdline.py
 > use [TAB]
 ```
+
+<!-- GPD remove -O3 and set PCL + OpenCv versions -->

@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="load_cloud" default="false" doc="load point cloud from file"/>
+
+  <arg name="action_name" value="generate_grasps" doc="action name space"/>
+  <arg name="frame_id" value="ee_link" doc="frame of the grasps sent to MTC"/>
+  <arg unless="$(arg load_cloud)" name="point_cloud_topic" value="/depth_registered/points_tf" doc="point cloud topic name"/>
+
+  <!-- file paths -->
+  <arg if="$(arg load_cloud)" name="path_to_pcd_file" value="$(find moveit_task_constructor_gpd)/data/pointclouds/cylinder.pcd" doc="path to point cloud file"/>
+  <arg name="path_to_gpd_config" value="$(find webots_manipulation)/config/gpd_config.yaml" doc="path to GPD config and gripper params file"/>
+
+  <!-- Run MTC pick and place -->
+  <!-- https://github.com/atenpas/gpd/tree/master/models/lenet/15channels/params -->
+  <node name="mtc_tutorial" pkg="deep_grasp_task" type="deep_grasp_demo" output="screen">
+      <param name="execute" value="true" />
+      <param name="action_name" value="$(arg action_name)"/>
+      <rosparam command="load" file="$(find webots_manipulation)/config/panda_object.yaml" />
+  </node>
+
+  <!-- Grasp detection using GPD -->
+  <node name="grasp_cloud_detection" pkg="moveit_task_constructor_gpd" type="grasp_cloud_detection" output="screen">
+    <param if="$(arg load_cloud)" name="path_to_pcd_file" value="$(arg path_to_pcd_file)"/>
+    <param unless="$(arg load_cloud)" name="point_cloud_topic" value="$(arg point_cloud_topic)"/>
+    <rosparam command="load" file="$(find deep_grasp_task)/config/calib/camera.yaml" />
+    <rosparam param="view_point">[0.0, 0.0, 0.0]</rosparam>
+    <param name="load_cloud" value="$(arg load_cloud)"/>
+    <param name="action_name" value="$(arg action_name)"/>
+    <param name="frame_id" value="$(arg frame_id)"/>
+    <param name="path_to_gpd_config" value="$(arg path_to_gpd_config)"/>
+  </node>
+</launch>

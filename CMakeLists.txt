@@ -13,7 +13,10 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_visual_tools
   roscpp
   rospy
+  sensor_msgs
+  tf2
   tf2_geometry_msgs
+  tf2_sensor_msgs
 )
 
 catkin_package(
@@ -22,6 +25,9 @@ catkin_package(
     moveit_visual_tools
     roscpp
     rospy
+    sensor_msgs
+    tf2
+    tf2_sensor_msgs
   DEPENDS
     EIGEN3
 )
@@ -66,6 +72,9 @@ target_link_libraries(pick_box_demo ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 add_executable(gripper_demo src/demo/gripper.cpp)
 target_link_libraries(gripper_demo ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
+add_executable(remap_pc src/remap_pc.cpp)
+target_link_libraries(remap_pc ${catkin_LIBRARIES})
+
 install(TARGETS
     grasp_generator_demo
     grasp_pipeline_demo
@@ -74,6 +83,7 @@ install(TARGETS
     move_group_interface_demo
     pick_and_place
     pick_box_demo
+    remap_pc
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
