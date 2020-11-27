@@ -66,5 +66,3 @@ roslaunch webots_manipulation motion_planning_pipeline.launch
 $ rosrun moveit_commander moveit_commander_cmdline.py
 > use [TAB]
 ```
-
-<!-- GPD remove -O3 and set PCL + OpenCv versions -->

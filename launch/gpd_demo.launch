@@ -22,7 +22,7 @@
   <node name="grasp_cloud_detection" pkg="moveit_task_constructor_gpd" type="grasp_cloud_detection" output="screen">
     <param if="$(arg load_cloud)" name="path_to_pcd_file" value="$(arg path_to_pcd_file)"/>
     <param unless="$(arg load_cloud)" name="point_cloud_topic" value="$(arg point_cloud_topic)"/>
-    <rosparam command="load" file="$(find deep_grasp_task)/config/calib/camera.yaml" />
+    <rosparam command="load" file="$(find webots_manipulation)/config/calib/camera.yaml" />
     <rosparam param="view_point">[0.0, 0.0, 0.0]</rosparam>
     <param name="load_cloud" value="$(arg load_cloud)"/>
     <param name="action_name" value="$(arg action_name)"/>

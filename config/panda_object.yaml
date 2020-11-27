@@ -5,7 +5,7 @@ max_solutions: 10
 arm_group_name: "manipulator"
 eef_name: "moveit_ee"
 hand_group_name: "endeffector"
-hand_frame: "tool_0"
+hand_frame: "tool0"
 
 # Poses
 hand_open_pose: "open"
@@ -23,8 +23,9 @@ surface_link: "base_link"
 # CYLINDER object specifications
 spawn_mesh: false
 object_name: "object"
-object_dimensions: [0.15, 0.1] # [height, radius]
-object_pose: [0.76, 0.6, 0.2, 0, 0, 0]
+object_dimensions: [0.15, 0.07] # [height, radius]
+# object_pose: [0.76, 0.6, 0.2, 0, 0, 0]
+object_pose: [-1, -1, 0.2, 0, 0, 0]
 
 # # BAR CLAMP
 # spawn_mesh: true
