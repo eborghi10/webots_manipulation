@@ -23,6 +23,8 @@ Clone the following dependencies into your workspace:
 - [`robotiq`](https://github.com/ros-industrial/robotiq)
 - [`universal_robot`](https://github.com/eborghi10/universal_robot)
 - [`ur5_e_moveit_config`](https://github.com/eborghi10/ur5_e_moveit_config)
+- [`deep_grasp_demo`]()
+- [`moveit_task_constructor`]()
 
 ## Instructions
 

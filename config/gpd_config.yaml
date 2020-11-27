@@ -40,11 +40,9 @@ weights_file = /GPD/gpd/models/lenet/15channels/params/
 #   sample_above_plane: only draws samples which do not belong to the table plane
 voxelize = 1
 voxel_size = 0.003
-remove_outliers = 0
-# workspace = -1.0 1.0 -1.0 1.0 -1.0 1.0
+remove_outliers = 1
 workspace = -2.0 2.0 -2.0 2.0 -2.0 2.0
-camera_position = 0.862 0.234 0.163
-# camera_position = 0.15 0 0.04
+camera_position = 0 0 0
 sample_above_plane = 1
 
 # Grasp candidate generation
@@ -54,7 +52,7 @@ sample_above_plane = 1
 #   num_orientations: the number of robot hand orientations to evaluate
 #   rotation_axes: the axes about which the point neighborhood gets rotated
 num_samples = 50
-num_threads = 4
+num_threads = 16
 nn_radius = 0.01
 num_orientations = 10
 num_finger_placements = 10
@@ -77,7 +75,7 @@ workspace_grasps = -1 1 -1 1 -1 1
 #   direction: the direction to compare against
 #   angle_thresh: angle in radians above which grasps are filtered
 filter_approach_direction = 1
-direction = 0 0 1
+direction = 1 0 0
 thresh_rad = 2.0
 
 # Clustering of grasps

@@ -3,7 +3,7 @@
   <arg name="load_cloud" default="false" doc="load point cloud from file"/>
 
   <arg name="action_name" value="generate_grasps" doc="action name space"/>
-  <arg name="frame_id" value="ee_link" doc="frame of the grasps sent to MTC"/>
+  <arg name="frame_id" value="base_link" doc="frame of the grasps sent to MTC"/>
   <arg unless="$(arg load_cloud)" name="point_cloud_topic" value="/depth_registered/points_tf" doc="point cloud topic name"/>
 
   <!-- file paths -->
@@ -11,7 +11,6 @@
   <arg name="path_to_gpd_config" value="$(find webots_manipulation)/config/gpd_config.yaml" doc="path to GPD config and gripper params file"/>
 
   <!-- Run MTC pick and place -->
-  <!-- https://github.com/atenpas/gpd/tree/master/models/lenet/15channels/params -->
   <node name="mtc_tutorial" pkg="deep_grasp_task" type="deep_grasp_demo" output="screen">
       <param name="execute" value="true" />
       <param name="action_name" value="$(arg action_name)"/>

@@ -26,9 +26,7 @@ TransformPointCloud::TransformPointCloud(ros::NodeHandle &node) : nh_(node), tfL
 
 void TransformPointCloud::callback(const sensor_msgs::PointCloud2::ConstPtr& msg)
   {
-    sensor_msgs::PointCloud2::Ptr msg_tf (new sensor_msgs::PointCloud2);
-
-    geometry_msgs::TransformStamped transformStamped;
+      geometry_msgs::TransformStamped transformStamped;
       try{
         transformStamped = tfBuffer_.lookupTransform("base_link", "camera_rgb_optical_frame",
                                 ros::Time(0));
@@ -37,6 +35,11 @@ void TransformPointCloud::callback(const sensor_msgs::PointCloud2::ConstPtr& msg
         ROS_WARN("%s",ex.what());
         ros::Duration(1.0).sleep();
       }
+
+      transformStamped.transform.rotation.x = 0;
+      transformStamped.transform.rotation.y = 0;
+      transformStamped.transform.rotation.z = 0;
+      transformStamped.transform.rotation.w = 1;
 
       tf2::doTransform(*msg, *msg_tf, transformStamped);
 
