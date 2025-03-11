@@ -1,0 +1,6 @@
+repositories:
+  # Here you can add the repositories you want to built in your workspace e.g
+  # rclpy:
+  #   type: git
+  #   url: https://github.com/ros2/rclpy
+  #   version: rolling
