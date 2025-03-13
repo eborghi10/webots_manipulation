@@ -1,67 +1,26 @@
-# webots_ros
-
-The `webots_manipulation` package contains training code of Webots with MoveIt!.
+# Webots manipulator demo
 
 ## Getting started
 
-- Build a dockerfile from `webots_docker`. Instructions in that repo.
-- Organize the project like this:
+To copy a demo world from Webots repo, I had to do this:
 
-```
-worskpace
-|
-|___webots_docker
-|___ws
-    |___src
-        |___robotiq
-        |___universal_robot
-        |___webots_manipulation
-```
+1. Open for example the "WEBOTS_HOME/projects/robots/universal_robots/worlds/ure.wbt" world file.
+2. If the simulation was running, stop it and revert it.
+3. Then, open one of the robot nodes in the scene tree and change its controller field from `ure_can_grasper` to <extern>.
+4. Save the simulation, restart it and run it.
 
-Clone the following dependencies into your workspace:
+Reference: https://www.cyberbotics.com/doc/guide/running-extern-robot-controllers?version=R2019b-rev1#example-usage
 
-- [`robotiq`](https://github.com/ros-industrial/robotiq)
-- [`universal_robot`](https://github.com/eborghi10/universal_robot)
-
-## Instructions
-
-### Minimal testing
+## Run Webots
 
 ```bash
-roslaunch webots_manipulation minimal.launch
+# Run world
+webots universal_robots/worlds/ure.wbt
+# Run external controller
+python3 universal_robots/controllers/my_controller/my_controller.py
 ```
 
-### Complete
+## To do
 
-```bash
-roslaunch webots_manipulation complete.launch
-```
-
-### [Old] Pick and place
-
-```bash
-rosrun webots_manipulation pick_and_place
-```
-
-### Grasping generator and pipeline
-
-```bash
-roslaunch webots_manipulation grasp_pipeline.launch
-```
-
-### Motion planning pipeline
-
-```bash
-roslaunch webots_manipulation motion_planning_pipeline.launch
-```
-
----
-
-## Tips
-
-- Getting `move_group`s. Open the MoveIt! Command Line Tool:
-
-```bash
-$ rosrun moveit_commander moveit_commander_cmdline.py
-> use [TAB]
-```
+* Test OpenVLA: https://github.com/openvla/openvla?tab=readme-ov-file#getting-started
+* Test LeRobot: https://github.com/huggingface/lerobot/blob/main/examples/11_use_lekiwi.md#j-train-a-policy

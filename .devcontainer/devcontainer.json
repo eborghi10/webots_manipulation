@@ -1,8 +1,14 @@
 {
 	"name": "webots-ros2",
+	"remoteUser": "dev",
     "build": {
-        "dockerfile": "Dockerfile"
+        "dockerfile": "Dockerfile",
+		"context": "..",
+		"args": {
+			"USERNAME": "dev"
+		}
     },
+	// "image": "cyberbotics/webots:R2025a-ubuntu22.04",
 	"runArgs": [
 		"--gpus=all",
 		"--runtime=nvidia",
@@ -13,8 +19,8 @@
 		"--pid=host", // Shares the host's PID namespace with the container
 		"--privileged" // Gives the container full access to the host's devices and allows it to run with root privileges
 	],
-    "workspaceMount": "source=${localWorkspaceFolder},target=/root/ros_ws/src/${localWorkspaceFolderBasename},type=bind",
-    "workspaceFolder": "/root/ros_ws/src",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/ws,type=bind",
+    "workspaceFolder": "/ws",
 	"containerEnv": {
 		// Uncomment to allow the container to access the X server on the host e.g. to run Rviz and other GUI tools
     	"DISPLAY": "${localEnv:DISPLAY}",
@@ -43,10 +49,13 @@
     ],
     "customizations": {
         "vscode": {
-            "settings": {},
+            "settings": {
+				"terminal.integrated.defaultProfile.linux": "bash"
+			},
             "extensions": [
 				"mhutchie.git-graph",
-				"GitHub.copilot"
+				"GitHub.copilot",
+				"ms-python.python"
 			]
         }
     }

@@ -1,23 +1,44 @@
 ARG BASE_IMAGE=nvidia/cuda:12.6.0-runtime-ubuntu22.04
-FROM ${BASE_IMAGE}
-SHELL [ "/bin/bash" , "-c" ]
+FROM ${BASE_IMAGE} AS base
 
 # Determine Webots version to be used and set default argument
 ARG WEBOTS_VERSION=R2025a
 
-# Disable dpkg/gdebi interactive dialogs
-ENV DEBIAN_FRONTEND=noninteractive
-
 # Install dependencies
 RUN apt-get update && \
-    apt-get install --yes curl wget xvfb locales sudo wget && \
-    apt-get upgrade --yes && \
+    apt-get install --yes \
+        curl \
+        git \
+        locales \
+        python3-pip \
+        sudo \
+        wget \
+        xvfb \
+        && \
     rm -rf /var/lib/apt/lists/*
 
 # Set the locales
 RUN locale-gen en_US en_US.UTF-8
 RUN update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 ENV LANG=en_US.UTF-8
+
+# Set a user name to fix a warning
+ARG USERNAME=root
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+# Delete user if it exists in container (e.g Ubuntu Noble: ubuntu)
+RUN if id -u $USER_UID ; then userdel `id -un $USER_UID` ; fi
+
+# Create the user
+RUN groupadd --gid $USER_GID $USERNAME \
+&& useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
+# Add sudo support.
+&& echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+&& chmod 0440 /etc/sudoers.d/$USERNAME
+
+# Disable dpkg/gdebi interactive dialogs
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Install Webots
 RUN mkdir -p /etc/apt/keyrings && \
@@ -27,31 +48,15 @@ RUN mkdir -p /etc/apt/keyrings && \
     apt update && \
     apt install -y --no-install-recommends webots
 ENV QTWEBENGINE_DISABLE_SANDBOX=1
+ENV WEBOTS_HOME=/usr/local/webots
+ENV PYTHONPATH=${WEBOTS_HOME}/lib/controller/python:$PYTHONPATH
 
 # Copy the configuration file
-COPY Webots-${WEBOTS_VERSION}.conf /root/.config/Cyberbotics/Webots-${WEBOTS_VERSION}.conf
+COPY .devcontainer/Webots-${WEBOTS_VERSION}.conf /home/$USERNAME/.config/Cyberbotics/Webots-${WEBOTS_VERSION}.conf
 
-# Set a user name to fix a warning
-ENV USER root
-ENV ROS_DISTRO=humble
+RUN mkdir -p /ws && chown $USERNAME:$USERNAME /ws
 
-# Add ROS 2 keys
-RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg && \
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
-
-# Install ROS 2 Humble
-RUN apt update && \
-    apt install -y ros-${ROS_DISTRO}-ros-base ros-dev-tools ros-${ROS_DISTRO}-webots-ros2
-
-# Create overlay workspace
-WORKDIR /root/ros_ws/src
-COPY packages.repos .
-
-RUN vcs import < packages.repos; \
-    cd ..; \
-    rosdep install --from-paths src --ignore-src -r -y; \
-    source /opt/ros/${ROS_DISTRO}/setup.bash; \
-    colcon build;
-
-# Add sourcing ROS setup.bash to .bashrc
-RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
+# Set the default user. Omit if you want to keep the default as root.
+USER $USERNAME
+ENV USER=$USERNAME
+WORKDIR /ws
