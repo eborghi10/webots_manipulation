@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=nvidia/cuda:12.6.0-runtime-ubuntu22.04
+ARG BASE_IMAGE=nvidia/cuda:12.6.0-devel-ubuntu22.04
 FROM ${BASE_IMAGE} AS base
 
 # Determine Webots version to be used and set default argument
@@ -53,6 +53,11 @@ ENV PYTHONPATH=${WEBOTS_HOME}/lib/controller/python:$PYTHONPATH
 
 # Copy the configuration file
 COPY .devcontainer/Webots-${WEBOTS_VERSION}.conf /home/$USERNAME/.config/Cyberbotics/Webots-${WEBOTS_VERSION}.conf
+
+# Install minimal dependencies (`torch`, `transformers`, `timm`, `tokenizers`, ...) for OpenVLA
+RUN pip install -r https://raw.githubusercontent.com/openvla/openvla/main/requirements-min.txt
+RUN pip install accelerate==0.32.1
+RUN pip install flash-attn==2.6.1 --no-build-isolation
 
 RUN mkdir -p /ws && chown $USERNAME:$USERNAME /ws
 
