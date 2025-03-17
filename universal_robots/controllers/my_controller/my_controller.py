@@ -1,3 +1,7 @@
+"""
+Reference: https://github.com/openvla/openvla/blob/main/experiments/robot/bridge/run_bridgev2_eval.py#L144
+"""
+
 from transformers import AutoModelForVision2Seq, AutoProcessor
 from PIL import Image
 

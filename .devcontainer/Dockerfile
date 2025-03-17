@@ -12,6 +12,7 @@ RUN apt-get update && \
         locales \
         python3-pip \
         sudo \
+        unzip \
         wget \
         xvfb \
         && \
@@ -56,8 +57,13 @@ COPY .devcontainer/Webots-${WEBOTS_VERSION}.conf /home/$USERNAME/.config/Cyberbo
 
 # Install minimal dependencies (`torch`, `transformers`, `timm`, `tokenizers`, ...) for OpenVLA
 RUN pip install -r https://raw.githubusercontent.com/openvla/openvla/main/requirements-min.txt
-RUN pip install accelerate==0.32.1
+RUN pip install accelerate==0.32.1 dora-rs-cli
+RUN pip install -r https://raw.githubusercontent.com/alik-git/RoboticsDiffusionTransformer/refs/heads/main/requirements.txt
 RUN pip install flash-attn==2.6.1 --no-build-isolation
+
+# Install dora-rs
+RUN curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/dora-rs/dora/main/install.sh | bash
+ENV PATH=$PATH:/home/dev/.dora/bin
 
 RUN mkdir -p /ws && chown $USERNAME:$USERNAME /ws
 

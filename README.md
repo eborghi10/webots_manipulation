@@ -24,3 +24,4 @@ python3 universal_robots/controllers/my_controller/my_controller.py
 
 * Test OpenVLA: https://github.com/openvla/openvla?tab=readme-ov-file#getting-started
 * Test LeRobot: https://github.com/huggingface/lerobot/blob/main/examples/11_use_lekiwi.md#j-train-a-policy
+* Try Unified Video Action Model: https://unified-video-action-model.github.io/
