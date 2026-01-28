@@ -1,0 +1,61 @@
+{
+	"name": "webots-vlm",
+	"remoteUser": "dev",
+    "build": {
+        "dockerfile": "Dockerfile",
+		"context": "..",
+		"args": {
+			"USERNAME": "dev"
+		}
+    },
+	"runArgs": [
+		"--gpus=all",
+		"--runtime=nvidia",
+		"--ipc=host",
+		"--network=host",
+		"--pid=host",
+		"--privileged"
+	],
+    "workspaceMount": "source=${localWorkspaceFolder},target=/ws,type=bind",
+    "workspaceFolder": "/ws",
+	"containerEnv": {
+    	"DISPLAY": "${localEnv:DISPLAY}",
+		"NVIDIA_VISIBLE_DEVICES": "all",
+		"NVIDIA_DRIVER_CAPABILITIES": "all"
+    },
+	"mounts": [
+		{
+			"source": "/tmp/.X11-unix",
+			"target": "/tmp/.X11-unix",
+			"type": "bind"
+		},
+		{
+			"source": "${localEnv:XAUTHORITY:-$HOME/.Xauthority}",
+			"target": "/root/.Xauthority",
+			"type": "bind"
+		},
+		{
+			"source": "${localEnv:HOME}${localEnv:USERPROFILE}/.bash_history",
+			"target": "/root/.bash_history",
+			"type": "bind"
+		},
+		{
+			"source": "${localEnv:HOME}${localEnv:USERPROFILE}/.cache/huggingface",
+			"target": "/home/dev/.cache/huggingface",
+			"type": "bind"
+		}
+    ],
+    "customizations": {
+        "vscode": {
+            "settings": {
+				"terminal.integrated.defaultProfile.linux": "bash"
+			},
+            "extensions": [
+				"mhutchie.git-graph",
+				"GitHub.copilot",
+				"ms-python.python"
+			]
+        }
+    },
+	"postCreateCommand": "echo 'Container ready! Run: webots universal_robots/worlds/ure.wbt'"
+}
