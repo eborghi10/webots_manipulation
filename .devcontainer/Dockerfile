@@ -55,15 +55,25 @@ ENV PYTHONPATH=${WEBOTS_HOME}/lib/controller/python:$PYTHONPATH
 # Copy the configuration file
 COPY .devcontainer/Webots-${WEBOTS_VERSION}.conf /home/$USERNAME/.config/Cyberbotics/Webots-${WEBOTS_VERSION}.conf
 
-# Install minimal dependencies (`torch`, `transformers`, `timm`, `tokenizers`, ...) for OpenVLA
-RUN pip install -r https://raw.githubusercontent.com/openvla/openvla/main/requirements-min.txt
-RUN pip install accelerate==0.32.1 dora-rs-cli
-RUN pip install -r https://raw.githubusercontent.com/alik-git/RoboticsDiffusionTransformer/refs/heads/main/requirements.txt
-RUN pip install flash-attn==2.6.1 --no-build-isolation
+# Install Python dependencies for VLM controller
+# First install torch with CUDA 12 support, then other packages
+RUN pip install --no-cache-dir \
+    torch==2.4.0 --index-url https://download.pytorch.org/whl/cu124
 
-# Install dora-rs
-RUN curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/dora-rs/dora/main/install.sh | bash
-ENV PATH=$PATH:/home/dev/.dora/bin
+RUN pip install --no-cache-dir \
+    "transformers>=4.40.0,<5.0.0" \
+    "Pillow>=9.0.0" \
+    "numpy>=1.21.0" \
+    "accelerate>=0.32.0" \
+    "timm>=0.9.10,<1.0.0" \
+    "torchvision>=0.19.0" \
+    "sentencepiece>=0.2.0" \
+    "protobuf>=4.0.0" \
+    "bitsandbytes>=0.43.0"
+
+# Install flash-attn from pre-built wheel (CUDA 12, PyTorch 2.4, Python 3.10)
+RUN pip install --no-cache-dir \
+    https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3+cu12torch2.4cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
 
 RUN mkdir -p /ws && chown $USERNAME:$USERNAME /ws
 

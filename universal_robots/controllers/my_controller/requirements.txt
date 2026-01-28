@@ -1,0 +1,18 @@
+# Core dependencies
+torch>=2.0.0
+transformers>=4.36.0
+Pillow>=9.0.0
+numpy>=1.21.0
+
+# OpenVLA backend
+# Note: Requires flash-attn for best performance
+# pip install flash-attn --no-build-isolation
+
+# LeRobot backend (optional)
+# lerobot>=0.1.0
+
+# For diffusion policies (optional)
+# diffusers>=0.25.0
+
+# Development
+# pytest>=7.0.0
